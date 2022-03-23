@@ -1,0 +1,86 @@
+Docker images 
+	List images in a machine 
+		docker images 
+		
+	To pull / download docker image 
+		docker pull <image_name>:<tag_name>
+			
+		Note: if we wont specify tag the by default latest will be considered.	
+		
+	To delete docker image 
+		docker rmi <image_name>:<tag_name>
+					(OR)
+		docker rmi <image_id>
+		
+	To delete all the images 
+		docker rmi $(docker images -q)
+		
+	To tag a docker image
+		docker tag <old_image> <new_image>
+		
+		ex: docker tag ubuntu:latest my_ubuntu:1.0
+		
+Docker containers 
+	To create/run a container from image
+		docker run -it -d --name <container_name> <image_name>
+		
+		-it - Interactive Terminal (tty) 
+		-d - deatached mode (when ever we create a container it will auto login to avoid this 
+			we can create a container in detached mode)
+		--name used to provide user defined conatainer name
+		
+	To list the running containers 
+		docker ps 
+			(OR)
+		docker container ls 	
+		
+	To delete a stop container 	
+		docker rm <conatainer_name>
+				(OR)
+		docekr rm <conatainer_id>
+		
+	To delete a running container 
+		Forceful deletion 
+			docker rm -f <conatainer_id>
+		Graceful deletion 
+			docker rm $(docker stop <conatainer_id>)
+			
+	To list all the containers (running and stopped)
+		docker ps -a 
+	
+	To list all stopped conatainers
+		docker ps -a --filter status=exited
+		
+	To delete all stopped container
+		docker rm $(docker ps -aq --filter status=exited)
+		
+	To check the logs of conatainers 
+		docker logs <container_id>
+		
+	To run a command inside a conatainer 
+		docker exec -it <container_id> <command>
+		
+	To login / get inside a containre 
+		docker attach <container_id>
+		
+Assignment: work with docker commands
+			Try to create a jenkins container (jenkins/jenkins:lts)
+			
+Custom Docker Image / Dockerfile 
+	- Dockerfile is used to create custom image on top stock image or any other image as base image.
+	
+	FROM 
+		- FROM must be the first non-command instruction in the Dockerfile.
+		- FROM is used to specify the base image on top of this image all the next instructions will be executed.
+		
+		FROM <image_name>:<tag>
+	
+	COPY and ADD 
+		- Both copy and add instruction is used to copy files and directories from host machine to the image.
+		- The source path to copy files should always be evaluted with reference to Dockerfile.
+		
+		ADD supports extra source formats 
+			- If the source is a compressed file add will automatically 
+			  uncompresses it to the destination.
+			- If the source is a link to a downloadable file it will download 
+			  to the destination.			  
