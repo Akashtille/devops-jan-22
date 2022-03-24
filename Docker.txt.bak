@@ -134,5 +134,6 @@ Custom Docker Image / Dockerfile
 			
 		ARG <var_name>=<default_value>
 
+		
 		To pass the value at build time 
 			docker build --build-arg <var_name>=<value> ....
