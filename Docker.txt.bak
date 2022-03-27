@@ -1,3 +1,39 @@
+Container 
+	A container is a set of isolated processes and resources. Linux achieves 
+	this by using namespaces, which allows processes to access only resources 
+	in that particular namespace, which allows having a process tree means set 
+	of processes that is completely independent of the rest of the systems processes.
+	
+	Docker definition: A container is a standard unit of software that packages 
+	up code and all its dependencies so the application runs quickly and reliably 
+	from one computing environment to another.
+
+Docker 
+	Docker is one of the tools that used the idea of the isolated resources to 
+	create a container that allows applications to be packaged with all the 
+	dependencies installed and ran wherever we wanted.
+	
+	Docker can only run on Linux machines this means I cant install Dokcer directly on Windows or any other OS.
+	If I want install Docker on windows then I need to run a Linux VM in windows on top that I need to run Docker.
+
+Virtualization (VM)
+	- VM is way of running virtual OS on top a host OS using a special software called Hyperviser.
+	- VM directly shares the harware of the host OS. 
+
+					VM 					vs 			Containerisation 
+	1. Virtualization at hardware level  		1. Virtualization at OS level 
+	2. Heavyweight - consume more host 			2. Lightweight
+	   resources 	
+	3. VM useses hypervisor 					3. containerisation tool is used 
+	4. limited performace - Boot up time        4. Native performace - usualy boot 
+		is more which is in minutes 			   fast in seconds.
+	5. Cosumes more storage 					5. Shres OS storage means only uses 
+												   required storage.
+	6. Supports all OS 							6. Supports on Linux
+
+host machine 
+	This is the machine in which docker is running 
+	
 Docker images 
 	List images in a machine 
 		docker images 
@@ -20,6 +56,9 @@ Docker images
 		
 		ex: docker tag ubuntu:latest my_ubuntu:1.0
 		
+	To delete dangling images / to delete all unwanted images / images which are not used
+		docker image prune 	
+	
 Docker containers 
 	To create/run a container from image
 		docker run -it -d --name <container_name> <image_name>
@@ -74,6 +113,7 @@ Custom Docker Image / Dockerfile
 		- FROM is used to specify the base image on top of this image all the next instructions will be executed.
 		
 		FROM <image_name>:<tag>
+	 
 	
 	COPY and ADD 
 		- Both copy and add instruction is used to copy files and directories from host machine to the image.
@@ -134,6 +174,44 @@ Custom Docker Image / Dockerfile
 			
 		ARG <var_name>=<default_value>
 
-		
 		To pass the value at build time 
 			docker build --build-arg <var_name>=<value> ....
+	
+	WORKDIR
+		This is used to set the working directory for all the instructions that follows it
+		such as RUN, CMD, ENTRYPOINT, COPY, ADD
+		
+		WORKDIR <path>
+
+		
+Docker Volumes
+ 	- As the layers inside the image are readonly which means once the image is created 
+	  we cannot change/edit so we cannot put the conatainer data in image.
+	- Container create a top most RW layer and all the runtime data is saved here. 
+	- Container layer is temparary layer, If we loose the container we loose data. so
+	  to retain/persist the container runtime data we need docker volumes.
+
+	Bind Mounts 
+		- we can mount host machine filesystem (files and directories) to the container
+		
+			docker run -v <host_path>:<container_path> 
+	Docker Volumes		
+		- These are docker managed filesystem and we use docker commands to manage these
+		  volumes 
+		- Volumes are easier to manage, backup or migrate than bind mounts.
+		- Volumes supports many drivers which means we can maunt many types of filesystem.
+		- Default location of docker volume is /var/lib/docker/volumes  	
+		
+		docker run -v <volume_name>:<container_path>
+		
+		To create volume 
+			docker volume create <volume_name>
+			
+		To list volume 
+			docker volume ls	
+			
+		To Delete volume 
+			docker volume rm <volume_name>	
+			
+Assignment: How to save the content of container to a image 
+			
