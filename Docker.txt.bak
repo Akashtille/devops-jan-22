@@ -182,7 +182,12 @@ Custom Docker Image / Dockerfile
 		such as RUN, CMD, ENTRYPOINT, COPY, ADD
 		
 		WORKDIR <path>
-
+	
+	EXPOSE 
+		- used to expose a port to the docker network 
+		- All conatainers in the same newtwork will have access to exposed port.
+		
+		EXPOSE <prot_number>
 		
 Docker Volumes
  	- As the layers inside the image are readonly which means once the image is created 
@@ -213,5 +218,39 @@ Docker Volumes
 		To Delete volume 
 			docker volume rm <volume_name>	
 			
-Assignment: How to save the content of container to a image 
+Assignment: How to save the content of container to a image. 
+			
+Namespaces and cgroups
+	- Docker uses linux namespaces to provide isolated workspace for processes called
+	  conatainer
+	- when a container is created, docker creates a set of namespaces for it and provides 
+	  a layer of isolation for container.
+	- Each container run in a different namespace 
+	
+
+	namespace (To list - lsns)
+		cgroups 
+			- Linux OS uses cgroups to manage the availale hardware resoruces such as 
+			  cpu, RAM, Disk, I/O.
+			- we can control tje access and also we can apply the limitations 
+
+			To list - lscgroup	
+		pid - namespace for managing processes (process isolation)
+		user - namespace for non-root user on linux.
+		uts - namespace for unix timesharing system which isolates kernel and version identifiers,
+			  time bonding of process.
+		ipc - (interprocess communication) namespace for managing the process communication.	  
+		mnt - namespace for managing filesystem mounts.
+		net - namespace for managing network interfaces.
+		
+Docker networking 
+	Publish 
+		PUBLISH = Expose + outside world port mapping 
+			
+	- publics will bind the container port to the host port which we can access from 
+	  outside world using <host_ip>:<port_mapped>
+	
+	- to publish a port 
+		docker run -p <host_port>:<container_port> .....
+		
 			
