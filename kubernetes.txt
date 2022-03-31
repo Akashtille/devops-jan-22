@@ -1,0 +1,71 @@
+Kubernetes Installation
+	Minimum system requirement for master nod is 2-core cpu and 4GB RAM
+	
+	1. sudp apt update 
+	2. sudo apt-get install -y apt-transport-https
+	3. sudo su -
+	4. curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+	5. echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list
+	6. sudo apt update 
+	7. sudo apt-get install -y docker.io
+	8. sudo systemctl start docker
+	9. sudo systemctl enable docker.service
+	
+	10. Create a ami from above instance to create workernodes 
+	
+	11. After ami is available, login again to master node 
+		(Make sure docker is running)
+		12. sudo su -
+		13. kubeadm init
+			ERROR1: if we get kubelet isn't running or healthy
+						kubelet doesnt got access to docker engine which means 
+						we need to configure cgroup of docker 
+					create a file /etc/docker/daemon.json with below content
+						{
+							"exec-opts": ["native.cgroupdriver=systemd"]
+						}
+					Reload docker daemon
+						systemctl daemon-reload
+						systemctl restart docker
+						systemctl restart kubelet
+					
+			Run kubeadm init again	
+			
+			ERROR2: if we get fileavailable error just delete those files 
+			ERROR3: if kubelet is running kill it 
+						lsof -i :<kublet_port>
+						kill -9 <process_id>
+			
+			Run kubeadm init again	
+				if we get kubeadm join command at the end means master node 
+				setup is successful and save the join command.
+
+		14. configure K8S kubectl 		
+			- exit from the root 
+			- copy the default k8s conf file to our home directory 
+					mkdir -p $HOME/.kube
+					sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+					sudo chown $(id -u):$(id -g) $HOME/.kube/config
+		
+		15. We install k8s CNI Driver
+			sudo sysctl net.bridge.bridge-nf-call-iptables=1
+			kubectl apply -f "https://cloud.weave.works/k8s/v1.13/net.yaml"
+			
+			check for node status - kubectl get nodes
+		
+		16.	Login to worker node 
+			sudo su -
+			create a file /etc/docker/daemon.json with below content
+				{
+					"exec-opts": ["native.cgroupdriver=systemd"]
+				}
+			Reload docker daemon
+				systemctl daemon-reload
+				systemctl restart docker
+				systemctl restart kubelet		
+				
+			Now open ports of master nodes 
+			
+			Run the join command with token which we got from master node 
+			
+			Repeat the same steps in other worker nodes
