@@ -306,5 +306,42 @@ Assignment: 1) docker export vs save vs commit
 		  manually.
 		- The host or any other containers won't be able to communicate 
 		  with this container untill a custom network is configured.
+
+Docker Architecture 
+	Docker Daemon 
+		- A background process that manages docker images, containers, network and volumes.
+		- This Daemon constantly listens for docker API request and processes them.
 	
-	 	  	
+	Docker REST API 
+		- API which is used by applictions to interact with the docker daemon. 
+		
+	Docker CLI 
+		- It is a command line interface for interacting with docker daemon through
+		  REST api.
+	
+	Docker Objects 
+
+Benifits of Docker 
+	Flexible: 
+		Complex applictions cab be divided and containerised in small compenets called 
+		microservice. 
+	
+	Lightweight: 
+		Containers share the machine’s OS system kernel and therefore do not require 
+		an OS per application, driving higher server efficiencies and reducing server and licensing costs
+
+	portable: 
+		we can build images anywhere and then deploy to cloud, run anywhere.	
+
+States of conatiner / Lifecycle of container 
+	1. Created - if container is newly created and container is not yet started.
+	2. Running - A currently running container. It means there is no problem 
+				 with container to run the process.
+	3. Exited - A container ran and completed ot executiom with failure.
+	4. paused - A container whose process have been paused. (we can unpause the container)
+	5. Dead - if docker daemon tried and failed to stop a container (host ram full)
+	6. Restarting - container will be in the phase of retarting the main process.
+
+	
+multistage build  
+docker compose 
