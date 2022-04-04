@@ -97,7 +97,11 @@ kubernetes Architecture
 			- Based on the worker node load, affinity and anti-affiny, taint configuration 
 			  pod will be scheduled to a particualr node.
 			  
-		controller manager 
+		Controller manager /control manager / kube-controller 
+			- It is a daemon that always runs and embeds core control loops known as controllers. 
+			- K8s has some inbuild controllers such as Deployment, DaemonSet, ReplicaSet, Replication controller,
+			  node controller, jobs, cronjob, endpoint controller, namespace controller etc.	
+			
 		Cloud controller manager 
 		
 		
@@ -199,5 +203,98 @@ To list objects
 To delete objects 
 	kubectl delete <object_type>
 
+
+Assignment: What happens if we create a pod with kubectl ?
 	
-			
+K8S Labels and selectors 
+	- K8S labels is a metadata key value which can be applied to any object in k8s.
+	- Labels are used to identify by using selectors.
+	- Multiple objects can have same label, multiple labels to same object and Label lenght should be less that 63 characters.
+	
+	TO list all labels of a object 
+		kubectl get <obeject_type> <obejct_name> --show-labels 
+	
+	
+	Selectors 
+		- Selectors are used to filter and identifly the labeled k8s object.
+		
+		Equality-Based 
+			- It will use only one label in comparision and it will look for objects with exact same 
+			  string in label.
+			- we can use 3 types of operators equal ( = or == ) and not-qual ( != )	
+		
+			example: 
+				selectors: 
+					matchLabels: 
+						app=nginx 
+						   (or)
+						app: nginx   
+		
+		set-based 
+			- This type of selector allows us to filter objects based on multiple set of values to a label key.
+			- 3 types of operators we can use in, notin and exists.
+
+				example: 
+					selectors: 
+						matchLabels: 
+							app in (nginx, my-nginx)
+							app exits (nginx, my-nginx)
+							app notin (nginx, my-nginx)
+Annotations 
+	- These are used for record purpose only and to provide some user information to objects.
+	- These are non-identifying metadata so we cannot use selectors on annotations.
+
+	example: personal_info, phone_number, imageregistry, author	
+	
+Assignment: Difference b/w set-based and equality-based selector.
+			Difference b/w labels and annotations.
+
+ReplicaSet vs Replication Controller
+	- Both ensures that a specified number of pod replicas are alyways running at a given point of time.
+	- Replication controller is a very old way of replicating the pos and now it is replaced by ReplicaSet
+      
+	- The only differenece b/w them is their selector types.
+		Replication Controller supports only equality-based selector. 
+		ReplicaSet supports both equality-based and set-based selectors.
+
+Deployment controller / Deployment / k8s deployment 
+	- Deployment is used to create replicas of pod and it makes sure at a given point of time 
+	  the number of replicas of pod is alway running. 
+	- Deployment internally uses ReplicaSet to replicate the pods.
+	- If we update the configuration in deployment it will automatically updates it to all the pods.
+	- Rollout and Rollback of pod update is possible.
+	- we can pause a deployment whenerver we need.
+	- Deployment has got its own internal autoscaller which is of type horizontal scaller. 
+		To apply calling 
+			kubectl autoscale deployment.v1.apps/<deployment_name> --min=5 --max=20 --cpu-percent=50	
+	- scaleup and scaledown is possible by increasing and decreasing the replica count at any given 
+	  point of time.
+		kubectl scale deployment.v1.apps/<deployment_name> --replicas=10	
+	
+	- deployment is a cluster level object.
+	
+		deployment = pod + ReplicaSet + autoscaling + RollingUpdates 
+	
+	Deployment spec file.
+		
+		apiVersion: apps/v1
+		kind: Deployment
+		metadata:
+		  name: nginx-deployment-new
+		  labels:
+			app: my-deployment-nginx
+		spec:
+		  replicas: 5
+		  selector:
+			matchLabels:
+			  app: nginx
+		  template:
+			metadata:
+			  labels:
+				app: nginx
+			spec:
+			  containers:
+			  - name: nginx
+				image: nginx:1.14.2
+				ports:
+				- containerPort: 80
