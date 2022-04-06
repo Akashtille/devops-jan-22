@@ -287,7 +287,7 @@ Deployment controller / Deployment / k8s deployment
 		  replicas: 5
 		  selector:
 			matchLabels:
-			  app: nginx
+			  app=nginx
 		  template:
 			metadata:
 			  labels:
@@ -298,3 +298,61 @@ Deployment controller / Deployment / k8s deployment
 				image: nginx:1.14.2
 				ports:
 				- containerPort: 80
+	
+Assignment for me: demo on selectors types 
+	
+DaemonSet
+	- DaemonSet ensures that a copy of pod is always running on all the worker nodes in the cluster.
+	-If a new node is added or if deleted DaemonSet will automatically adds/deletes the pod.
+
+	usage: 
+		- we use DaemonSet to deploy monitoring agents in every worker node.
+		- Log collection daemons: to grab the logs from worker and all the pods running in it.
+		
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset
+spec:
+  selector:
+	matchLabels:
+	  app: daemonset-nginx
+  template:
+	metadata:
+	  labels:
+		app: daemonset-nginx
+	spec:
+	  containers:
+	  - name: nginx
+		image: nginx:1.14.2
+		ports:
+		 - containerPort: 80		
+		 
+Statefull Applications 
+	- User session data is saved at the server side.
+	- if server goes down, it is difficult to transfer the session data to other server. 
+	- This type of application will not work, if we want to implement autoscalling.
+	
+Stateless Applications
+	- user sessiondata is never saved at the server side.
+	- using a common authentication gateway / client token method to validate the users 
+	  once for multiple microservices.	
+		
+https://medium.com/tech-tajawal/microservice-authentication-and-authorization-solutions-e0e5e74b248a		
+
+Monolothic and Microservice architecture 
+
+	Monolothic architecture
+		- A monolothic application has a single code base with multiple moduels in it.
+		- It is a single build for entire application.
+		- To make minor changes to application, we need to re-build and re-deploy the 
+		  complete application.
+		- scalling is very challenging.
+			
+	Microservice architecture 
+		- A microservice application is composed of small (micro) services. 
+		- Each service will have a different code base.
+		- Application are divided into as small as possible sub applications called services
+		  which are independent to each other which are called loosly coupled.	
+		- Each service can be managed seperately and it is deployable seperately.
+		- Services need not to share same technology stack or frameworks.		 
