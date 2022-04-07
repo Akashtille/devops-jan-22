@@ -356,3 +356,40 @@ Monolothic and Microservice architecture
 		  which are independent to each other which are called loosly coupled.	
 		- Each service can be managed seperately and it is deployable seperately.
 		- Services need not to share same technology stack or frameworks.		 
+
+StatefulSet 
+	- StatefulSet = Deployment + sticky identity for each and every pod replica.
+	- Unlike a deployment a StatefulSet maintains a sticky identity for each of the pod.
+		
+Node controller 
+	- Looks for node statuses and reponds to API server only when a node is down.
+
+Endpoint Controller
+	- Populates the information of endpoints of all the objects.	
+		
+Service (svc)
+	- Service is an REST api objects with set of policies for defining the 
+	  access to set of pods.
+	- Services are the default load balancer in k8s.
+	- services are always created and works at cluster level.
+	- services are the networking configurations which we do in k8s.
+	- k8s prefers to use 30000 - 50000 range of ports to define services.
+
+1. ClusterIP
+	- This is the default type of service which exposes the IPs of pod to the other pods 
+	  with in the same cluster.
+	- ClusterIP cannot be accessed outside cluster.
+	- services are the default loadbalancers of k8s.
+	
+	apiVersion: v1 
+	kind: Service 
+	metadata:
+	     name: my-svc 
+	spec: 
+		type: ClusterIP
+		selector: 
+			app: my-nginx 
+		ports: 
+			- name: http
+			  port: 30080
+			  targetPort: 8080	
