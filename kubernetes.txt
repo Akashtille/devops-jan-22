@@ -393,3 +393,50 @@ Service (svc)
 			- name: http
 			  port: 30080
 			  targetPort: 8080	
+
+2. nodePort 
+	- A nodeport service is the most primitive way to get the external traffic directed to our services / applications 
+	  running inside a pod within the cluster.
+	- By default NodePort acts as a load balancer. 
+	- Automatically a ClusterIP will be created internally. 
+	
+		NodePort = ClusterIP + a port mapping to the all the nodes of cluster.
+		
+	- If we wont specify any port while creating nodeport, k8s will automatically asign a port between the range 30000 - 32767
+	- By default nodeport will open the port in all the node in cluster including master node.	
+	
+	apiVersion: v1 
+	kind: Service 
+	metadata:
+	     name: my-svc 
+	spec: 
+		type: NodePort
+		selector: 
+			app: my-nginx 
+		ports: 
+			- name: http
+			  nodePort:30082	
+			  port: 8080
+			  targetPort: 80
+			  
+3. Load Balancer
+	- It is a tyoe of service which is used to link exernatl load balancer to the cluster.
+	- This type of serviec is used by cloud providers and this service is completely depends on cloud providers. 
+	- K8s now proides a better alternative for this service type which is called Ingress.
+
+Assignment: 
+	
+How to use custom images / connect to a registry through k8s 
+	1. Login to the docker hub account 
+		  docker login 
+	2. Create a app to print ip 
+			using flask 
+	3. 	push the image to your registry 
+	4 use the above custom image in k8s spec file.
+	
+		image: <username>/<regirty_name>:<tag>
+		imagePullPolicy: IfNotPresent
+		
+	5. Create a service of type NodePort attaching the above pods 
+		
+			  
