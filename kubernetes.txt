@@ -493,6 +493,92 @@ namespaces
 			kubectl apply -n <ns_name> -f <spec>.yml
 		
 		Note: what if we use both inside specfile and also in apply command 
-				- apply command got high priority so object will be created in the apply command namespace.
+				- apply command check and compares the namespace and wont allow to create the obejct if the namespace is different.
 
 Assignment: try exec to a pod 				
+	
+	- pod to pod communication is open if the 2 pods are in the same namespace.	
+	- If the pods are in different namespace by default they can't communicate we need a service object for this.
+	
+	How a microservice will communicate with other microservice
+	What is service discovery in k8s 
+		
+Servce Discovery 
+	There are 2 ways of docovering a service 
+		DNS 
+		  - DNS server is added to the cluster in order to watch the k8s service requests.
+		  - API server create DNS record sets for each new service.
+		  - REcord A type is used in k8s service discovery and this DNS is created on service and pod objects.
+		  
+			syntax of DNS 
+					<object_name>.<namespace_name>.<object_type>.<k8s_domain>
+					
+					ex: my-app-svc.default.svc.local 
+					ex: my-app-svc.default.svc.example.com 
+					
+		ENV variables 
+		  - which ever the pods that runs on a node, k8s adds environment variables for each of them to identify the service 
+			running in it.
+		  
+		headless service 
+		  - When we neither need nor want loadbalancig and a single IP point to a service, we need use headless service.
+		  - Headless service returns all the ips of the pods it is selecting.
+		  - headless serivce is created by specifing none for clusterIP 
+		  - headless service is usually used with statefulsets.
+		  
+		apiVersion: v1 
+		kind: Service 
+		metadata:
+			 name: my-svc 
+		spec: 
+			ClusterIP: none
+			selector: 
+				app: my-nginx 
+			ports: 
+				- name: http
+				  port: 30080
+				  targetPort: 80	
+				  
+		nodePort = headless + port mapping 		  
+		
+		apiVersion: v1 
+		kind: Service 
+		metadata:
+			 name: my-svc 
+		spec: 
+			type: NodePort
+			ClusterIP: none
+			selector: 
+				app: my-nginx 
+			ports: 
+				- name: http
+				  nodePort:30082	
+				  port: 8080
+				  targetPort: 80		
+				  
+		1. Create a headless service with statefulsets
+		2. Login to any one of pod 
+		3. apt install dnsutils and do nslookup <service_name>	
+		
+pod phase 
+k8s volumes 
+pod patterns / init containers / side car container 
+probes - 3 
+cronjob and Jobs 
+RBAC - 
+resource limits and quots
+network policy
+
+helm 
+ 
+ingress 
+
+node selector , affinity , taint 
+configMap and secrets 
+deployment stratergies 
+
+docker multistage build 
+docker compose 
+
+
+			
