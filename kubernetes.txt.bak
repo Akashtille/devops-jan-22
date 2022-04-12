@@ -521,7 +521,7 @@ Servce Discovery
 			running in it.
 		  
 		headless service 
-		  -  When we neither need nor want loadbalancig and a single IP point to a service, we need use headless service.
+		  - When we neither need nor want loadbalancig and a single IP point to a service, we need use headless service.
 		  - Headless service returns all the ips of the pods it is selecting.
 		  - headless serivce is created by specifing none for clusterIP 
 		  - headless service is usually used with statefulsets.
@@ -560,8 +560,117 @@ Servce Discovery
 		2. Login to any one of pod 
 		3. apt install dnsutils and do nslookup <service_name>	
 		
-pod phase 
+pod phases / status / states / life cycle 
+	1. pending 
+		- This is the status of pod when pod will be waiting for k8s cluster to accept it.
+		- pod will be downloading the image from registry.
+		- pod wiil be in pending till the scheduler assigns a node to the pod.
+	
+	2. Running 
+		- The pod has been assigned a node and all the containers inside the pod is running.
+		- Atleast one container is in running state and others in starting or restarting state then pod will show 
+		  running state.
+
+	3. Failed 
+		- All the container in the pod should not be running and any one container being terminated in failure.
+		
+	4. Succeeded 
+		- ALl the containers in pod have been terminated successfully/gracefully.
+		
+	5. Unknown 
+		- For some reason the state of the pod could not be obtaied by API server.
+		- The status may occur when k8s cannot communicate with the kubelet or the worker node.
+	
+	
+terminating 
+	- when pod is being deleted.
+	
+container status 
+	Running 
+		- Means container is running the process inside without any error 
+	Terminated
+		- Process inside the container has completed the execution or may be failed due to some error.
+	waiting 
+		- If a container is not running or neither in terminated state.
+	
+Common errors
+	ImagePullBackOff 
+		- Docker image registry is not accessible.
+		- Image name / tag version specified is incorrent.
+	CrashLoopBackOff
+        - We get this error when probe check has failed.
+		- Docker image may be faulty.
+	RunContainerError 
+		- Configmap / secrets are missing. 
+		- Volumes are not available 
+		
+		
 k8s volumes 
+	persistent volume (pv)
+		- It is a storage space which can be claimend to any pod in the cluster.
+		- These are cluster level object and not bound to namespace.
+		
+		we can control the access to volume in 3 ways:
+			- ReadOnlyMany(ROX) allows being mounted by multiple nodes in read-only mode.
+			- ReadWriteOnce(RWO) allows being mounted by a single node in read-write mode.
+			- ReadWriteMany(RWX) allows multiple nodes to be mounted in read-write mode.
+		
+		Note: If we need write access to volume from multiple pods scheduled in mulitple nodes then use ReadWrtieMany
+		
+	apiVersion: v1
+	kind: PersistentVolume
+	metadata:	
+		name: my-pv
+		labels: 
+			volume: test
+	spec: 
+		storageClassName: local 
+		accessModes: 
+			- ReadWriteOnce
+		capacity: 
+			storage: 2Gi
+		hostPath: 
+		    path: "/home/ubuntu/my-pv-volume" 
+			   
+	Persistent volume claim (pvc)
+		- This is the object used to claim / mount the required amount of storage from persistent volume to any 
+		  pod in the cluster.
+		- After we create the PersistentVolumeClaim, the Kubernetes control plane looks for a PersistentVolume that 
+		  satisfies the claim's requirements. 
+		- If the control plane finds a suitable PersistentVolume with the same StorageClass, it binds the claim to the volume.
+	
+	apiVersion: v1
+	kind: PersistentVolumeClaim
+	metadata:	
+		name: my-pvc
+	spec: 
+		storageClassName: local 
+		accessModes: 
+			- ReadWriteOnce
+		resources: 
+		    requests:
+                storage: 1Gi 
+        	
+	using this in a pod 
+	
+	apiVersion: v1
+	kind: Pod 
+	metadata: 
+		name: my-pvc-pod	
+	spec: 
+        volumes: 
+		    - name: pvc-volume
+			  persistentVolumeClaim: 
+			       claimName: my-pvc # This name should be same the PVC object name
+		containers:
+		   - name: my-nginx 
+			 image: nginx:latest
+			 ports: 
+				- containerPort: 80
+			 volumeMounts: 
+			    - mountPath: "/usr/share/nginx/html"
+
+			   
 pod patterns / init containers / side car container 
 probes - 3 
 cronjob and Jobs 
