@@ -672,7 +672,97 @@ k8s volumes
 				  name: pvc-volume # This name should be same as the above volume name 
 
 			   
-pod patterns / init containers / side car container 
+pod patterns / container types
+	init containers 
+		- init containers are the containers that will run completely before starting 
+		  the main app container.
+		- This provides a lifecycle at the startup and we can define things for 
+          initialization purpose.
+        - kubernetes has stopped support of probes in init containers.
+        - These are pod level objects.
+	    - we can use this container to have some deply on the startup of the main container.
+	
+	These are some of the scenarios where you can use this pattern
+		- You can use this pattern where your application or main containers need some
+		  prerequisites such as installing some software, database setup, permissions on the file
+		  system before starting.
+		- You can use this pattern where you want to delay the start of the main containers.
+
+	apiVersion: v1
+	kind: Pod 
+	metadata: 
+		name: init-container	
+	spec: 
+		containers:
+		   - name: my-nginx 
+			 image: nginx:latest
+			 ports: 
+				- containerPort: 80
+		initContainers: 
+		   - name: busybox
+		     image: busybox 
+			 command: ["/bin/sh"]
+	         args: ["-c","echo '<html><h2>THis is a init container</h2></html>' >> /work-dir/index.html"]
+		     volumeMounts: 
+		       - name: workdir
+		         mountPath: "/work-dir"
+		volumes: 
+           - name: workdir
+             emptyDir: {}		   
+		
+		1. login to pod 
+				kubectl exec -it <pod_name> -- /bin/sh 
+		2. apt update && apt install -y curl 
+		3. curl localhost
+			
+		To check the log of particular container out of multiple in a pod 
+			kubectl logs <pod_name> -c <container_name>
+		
+	Sidecar container 
+		- These are the containers that will run along with the main app container.
+		- we have a app conaitner which is working fine but we want to extend the 
+		  functionality without changing the existing code in main container for this 
+          purpose we can use sidecar container.
+        - we use this container to feed the log data to monitoring tools.	
+		
+		These are some of the scenarios where you can use this pattern
+			- Whenever you want to extend the functionality of the existing single container pod without
+			  touching the existing one.
+			- Whenever you want to enhance the functionality of the existing single container pod
+			  without touching the existing one.
+			- You can use this pattern to synchronize the main container code with the git server pull.
+			- You can use this pattern for sending log events to the external server.
+			- You can use this pattern for network-related tasks.
+
+	apiVersion: v1
+	kind: Pod 
+	metadata: 
+		name: init-container	
+	spec: 
+		containers:
+		   - name: my-nginx 
+			 image: nginx:latest
+			 ports: 
+				- containerPort: 80
+             volumeMounts: 
+		       - name: workdir
+		         mountPath: "/var/log/nginx"
+		   - name: sidecar-busybox
+		     image: busybox 
+			 command: ["/bin/sh", "-c","while true; do cat /var/log/nginx/access.log /var/log/nginx/error.log; sleep 15; done"]
+		     volumeMounts: 
+		       - name: workdir
+		         mountPath: "/var/log/nginx"
+		volumes: 
+           - name: workdir
+             emptyDir: {}	
+
+	Adaptor container 
+		- In this patter we use a sidecar container to feed the log data to a monotoring 
+		  tool.
+	
+	https://www.magalix.com/blog/kubernetes-patterns-the-ambassador-pattern
+	
 probes - 3 
 cronjob and Jobs 
 RBAC - 
