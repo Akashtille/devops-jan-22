@@ -881,7 +881,7 @@ Startup Probe
 		initialDelaySeconds: 3
 	    periodSeconds: 3   
 
-Assigment: create livenessProbe and readinessprobe with tcp, http, exec 	
+Assigment: create livenessProbe and readinessprobe with tcp, http, exec 		
 	
 RBAC 	
 cronjob and Jobs 
