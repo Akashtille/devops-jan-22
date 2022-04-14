@@ -884,6 +884,146 @@ Startup Probe
 Assigment: create livenessProbe and readinessprobe with tcp, http, exec 	
 	
 RBAC 	
+	How user access is maintained in k8s ?
+	
+	Role-Based access control
+		- accounts 
+		- Roles 
+		- Binding of roles 
+		
+	Accounts 
+		There are 2 types accounts in k8s 
+		
+		1. USER ACCOUNT 
+		   It is used to for human users to control the access to k8s cluster.
+		
+		2. SERVICE ACCOUNT 
+		   - It is used to give access to k8s cluster to external tools/applications and 
+		     also to give access to other components inside the cluster.
+           - Any application running inside or outside the cluster need a service account 
+             to access API server.		   
+		   - When a SA is created, first k8s creates a token and keeps that token in a secret object 
+             and then the secret object is linked to the service account.
+		
+		To list service account 
+			kubectl get sa 
+			kubectl get serviceaccounts 
+
+		To create SA
+			kubectl create serviceaccount <service_account_name>
+				
+			Note: To check screte object of sa
+					kubectl describe secrets <secret_name>
+		
+		Attach a SA to pod
+				
+		apiVersion: v1
+		kind: Pod 
+		metadata: 
+			name: sa-pod	
+		spec: 
+			serviceAccountName: my-sa
+			containers:
+			   - name: liveness 
+				 image: k8s.gcr.io/liveness
+				 args:
+					- /server
+				 livenessProbe:
+				    httpGet:
+				  	   path: /healthz
+				  	   port: 8080
+				    initialDelaySeconds: 3
+				    periodSeconds: 3		
+		
+	Roles 
+		- For a user roles are the set of rules which defines the access level to 
+		  k8s resources. 
+		- Roles are always user defined to any type of account.
+		- Roles works at namespace level.
+		
+		comman fiels in roles 
+			apiGroups: List the api groups to control the access to a account.
+			Subject: Users, service_account or Groups
+			Resources: K8S objects on which we want to define this role 
+					ex: Pods, Deployments etc..
+			Verbs: The operations/actions that a user can perform in k8s cluster
+				["get","list","create","update","delete","watch","patch"]	
+		
+		Create a role 
+			apiVersion: rbac.authorization.k8s.io/v1
+			kind: Role
+			metadata:
+			  namespace: default
+			  name: pod-reader
+			rules:
+				- apiGroups: "*"
+				  resources: ["pods"]
+				  verbs: ["get", "watch", "list"]
+	
+		To create role in cli 
+			kubectl create role <role_name> --resource=pods --verb=list -n <namespace>
+	
+	ClusterRole 
+		- It is a cluster wide role which is a non-namespaced object.
+		- CR defines permissions on namesapce objects and it grants permissions across all the
+		  namespaces or individual namespace also.
+	
+		usage: 
+			If we need to define permissions inside a namesapce use Roles. 
+			If we need to define permissions at cluster wide use ClusterRole
+			
+		Create a role 
+			apiVersion: rbac.authorization.k8s.io/v1
+			kind: ClusterRole
+			metadata:
+			  name: cluste-role-pod-reader
+			rules:
+				- apiGroups: "*"
+				  resources: ["pods"]
+				  verbs: ["get", "watch", "list"]			
+	
+	
+	RoleBinding and ClusterRoleBinding 
+		- Role bindind as name indicates is used to bind roles to subjects (user, sa , groups)
+		- Cluster Role bindind is used to bind cluster roles to subjects (user, sa , groups)
+		
+		- we can user rolebinding to bind clusterrole to a role of a particular namespace.
+		
+		
+	RoleBinding
+		apiVersion: rbac.authorization.k8s.io/v1
+		kind: RoleBinding
+		metadata:
+		   name: my-role-binding
+		   namespace: default
+		roleRef:
+		   apiGroup: rbac.authorization.k8s.io
+		   kind: Role
+		   name: pod-reader # the name of role we want to attach the account.
+		subjects: 
+           - kind: ServiceAccount
+			 name: my-sa # the name of account need to attached to role 
+			 namespace: default 	
+	
+	TO check the roles affect 
+		kubectl auth can-i list svc --as=system:serviceaccount:<namespace>:<service_account> -n <namepsace>
+		
+		ex: kubectl auth can-i list svc --as=system:serviceaccount:default:my-sa -n default
+
+	ClusterRoleBinding
+		apiVersion: rbac.authorization.k8s.io/v1
+		kind: ClusterRoleBinding
+		metadata:
+		   name: my-cluste-role-binding
+		roleRef:
+		   apiGroup: rbac.authorization.k8s.io
+		   kind: ClusterRole
+		   name: <cluster_role_name> # the name of cluster role we want to attach the account.
+		subjects: 
+           - kind: ServiceAccount
+			 name: my-sa # the name of account need to attached to role 
+			 namespace: default 	
+
 cronjob and Jobs 
 
 resource limits and quots
