@@ -1005,7 +1005,7 @@ RBAC
 			 name: my-sa # the name of account need to attached to role 
 			 namespace: default 	
 	
-	TO check the roles affect 
+	To check the roles affect 
 		kubectl auth can-i list svc --as=system:serviceaccount:<namespace>:<service_account> -n <namepsace>
 		
 		ex: kubectl auth can-i list svc --as=system:serviceaccount:default:my-sa -n default
@@ -1018,22 +1018,133 @@ RBAC
 		roleRef:
 		   apiGroup: rbac.authorization.k8s.io
 		   kind: ClusterRole
-		   name: pod-reader # the name of role we want to attach the account.
+		   name: <cluster_role_name> # the name of cluster role we want to attach the account.
 		subjects: 
            - kind: ServiceAccount
 			 name: my-sa # the name of account need to attached to role 
 			 namespace: default 	
 
-cronjob and Jobs 
+helm
 
-resource limits and quots
+How to create/schedule a pod to a particualr work node? 
+How not to create a pod on a node ?
+
+node selector
+	- Node selector is a way of binding pods to a particular worker node based on labels given 
+	  to that node.
+	- Logical expresions type of selection cannot be achived in node selector.
+	
+	To label a node 
+		kubectl label node <node_name> <key>=<value>
+	
+Node Afinity and anti-afinity (Inter-pod affinity)
+	- Node selector with logical expresions is Affinity 
+	- Using node afinity we can spread pods accross worker nodes based on 
+	  CPU and RAM capacity (memory-intense mode), Availabilty zones (HA mode).
+	
+	- requiredDuringSchedulingIgnoredDuringExecution 
+		The scheduler can't schedule the Pod unless the rule is met.	
+	- preferredDuringSchedulingIgnoredDuringExecution 
+		The scheduler tries to find a node that meets the rule. If a matching node is not available, 
+		the scheduler still schedules the Pod in normal way.
+    - IgnoredDuringExecution 
+		if the node labels change after Kubernetes schedules the Pod, the Pod continues to run.	
+
+		
+	spec: 
+			containers: 
+			affinity: 
+			   podAntiAfinity: 
+	              preferredDuringSchedulingIgnoredDuringExecution: 
+				     labelSelector:
+					    - matchExpressions: 
+							 - key: env
+                               operator: in 
+                               values: 
+                                  - test
+                                  - prod								  
+
+									 
+Anti-Afinity (Inter-pod affinity)
+	- This is used to define whether a given pod should or should not be scheduled on a particular node 
+      based on labels.
+	  
+		spec: 
+			containers:
+			  ....
+			ifNotPresent: 
+                nodeSelector: 
+					env: test
+					
+		spec: 
+			containers: 
+				...
+			affinity: 
+				podAntiAfinity: 
+                 	requiredDuringSchedulingIgnoredDuringExecution:
+						- labelSelector:
+                            - matchExpressions: 
+                                - key: env 
+                                  operator: in 
+                                  values: 
+                                     - test 
+                                     - qa				
+
+Taints and Tolerations
+	- Taints are used to repel the pods from a specific worker node.
+    - We can apply taint ti worker nodes which tells scheduler to repel all pods expcet the pods 
+	  with toleration defind in it for the taint.
+	- only the pos with toleration define in it for the taint of worker node. 
+       
+	- 2 operators we can use Equal and Exists (If we use Exists, no value required)   
+	- Bellow are the effects we can use,
+		1) NoSchedule - This taint means unless a pod with toleration k8s won't be able 
+           to schedule a pod to tainted node.		
+		2) NoExecute - To delete all the pods except some required pods we can use this. 
+		
+		To taint a worker node 
+			kubectl taint nodes <node_name> <taint_key>=<taint_value>:<taint_effect>
+			
+		To remove the taint (use - at the end)
+			kubectl taint nodes <node_name> <taint_key>=<taint_value>:<taint_effect>-
+			
+		To add tolerations
+				(single toleration with Equal)
+			spec: 
+				tolerations: 
+					- key: "key1"    
+					  operator: "Equal"
+					  value: "value1"
+					  effect: "NoSchedule"
+			
+				(single toleration with Exists)
+			spec: 
+				tolerations: 
+					- key: "key1"    
+					  operator: "Exists"
+					  effect: "NoSchedule"
+					  
+				(multiple tolerations)
+			spec: 
+				tolerations: 
+					- key: "key1"    
+					  operator: "Equal"
+					  value: "value1"
+					  effect: "NoSchedule"
+					- key: "key2"    
+					  operator: "Equal"
+					  value: "value2"
+					  effect: "NoExecute"	
+					  
+					  
+resource limits and quotas
+ingress
+
 network policy
-
-helm 
+cronjob and Jobs 
  
-ingress 
-
-node selector , affinity , taint 
+ 
+ 
 configMap and secrets 
 deployment stratergies 
 
