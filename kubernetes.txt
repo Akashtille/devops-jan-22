@@ -1136,16 +1136,141 @@ Taints and Tolerations
 					  value: "value2"
 					  effect: "NoExecute"	
 					  
-					  
+configMap and secrets 
+	- Configmap are k8s object that allows us to separate the configuration data/files from the 
+	  image content of the pod.
+	- Using this we can keep the configurations of application portable and same configuration
+	  can be used in multiple pods.
+	- configmaps are used for non-confidential data.	
+		
+	Create a configmap 
+		1. Create a file by name "app.properties" 
+				environment=test
+				database_url="192.168.10.9"
+		2. Create configmaps 
+			a. load the single config file 
+				kubectl create configmap <configmap_name> --from-file configs/app.properties
+		
+			b. load the multiple config file
+				kubectl create configmap <configmap_name> --from-file configs/
+				
+		3. using configmaps in pod 
+			spec: 
+				containers: 
+				   - name: nginx 
+				     image: nginx 
+					 env: 
+					    - name: CURRENT_NAME
+						  valueFrom: 
+							  configMapKeyRef: 
+									name: <configmap_name>
+									key: environment
+
+Secrets 
+	- secrets are used for confidential data.
+	- k8s by default uses base-64 encoding method to encrypt the data.
+	
+	type 
+		Opaque - for user related data in base64 
+		service account token - kubernetes.io/service-account-token 
+		docker cofig - kubernetes.io/dockercfg 
+		
+			
+	1. get the encoded values 
+		echo "production" | base64	
+			output: cHJvZHVjdGlvbgo=
+	2. use the above encoded value in secret 
+		apiVersion: v1
+		kind: Secret
+		metadata:
+			name: my-secret
+		type: Opaque
+		data:
+			environment: cHJvZHVjdGlvbgo=
+	
+	3. using secrets in pod 
+			spec: 
+				containers: 
+				   - name: nginx 
+				     image: nginx 
+					 env: 
+					    - name: CURRENT_NAME
+						  valueFrom: 
+							  secretKeyRef: 
+									name: <secret_name>
+									key: environment	
+
 resource limits and quotas
+	How to limit the number of pod to a namespace ?
+	How to limit the memory to a pods ? 	
+
+	Count quota 
+		- we use k8s quotas to precisely specify the number of objects a user can work with.
+		- we can define quotas for the below objects 
+			count/persistentvolumeclaims
+			count/services
+			count/secrets
+			count/configmaps
+			count/replicationcontrollers
+			count/deployments.apps
+			count/replicasets.apps
+			count/statefulsets.apps
+			count/jobs.batch
+			count/cronjobs.batch
+			
+		Applying the resource quota for an object (count quota)
+			apiVersion: v1 
+			kind: ResourceQuota 
+			metadata: 
+			    name: count-quota 
+			spec: 
+				hard: 
+					pods: "2"
+					   or 
+					count/pods: "2"  
+					
+		Applying quotas for CPU, RAM, DISK SPACE
+			apiVersion: v1 
+			kind: ResourceQuota 
+			metadata: 
+			    name: ram-quota 
+			spec: 
+				hard: 
+					request.memory: "500Mi" 
+					limits.memory: "800Mi"
+
+	Limitations 
+		CPU 
+			- 1 cpu, in k8s is equal to 1 core/cpu 100%.
+			ex:  0.1 cpu - 10 % of 1 cpu - 1 gup - 1 hyperthread - 1 Nueral 
+		
+		Memory 
+			- It will be in terms of bytes 
+			- It should fixed numebrs always 
+			syntax: Ei, Pi, Ti, Gi, Mi, Ki
+			
+		using quotas in pod 
+			spec: 
+				containers: 
+				   - name: nginx 
+				     image: nginx 
+					 resources:
+					    requests: 
+						   memory: "500Mi"
+						   cpu: 0.5
+						limits:
+                           memory: "1Gi"
+                           cpu: 1		
+	
+	Note: In terms of cpu k8s doesnot go behind the limits (it never throttles).
+		  but in terms of memory (RAM) k8s allows the pods to go behind the limit of RAM.	
+	
+	
 ingress
 
 network policy
 cronjob and Jobs 
- 
- 
- 
-configMap and secrets 
+
 deployment stratergies 
 
 docker multistage build 
