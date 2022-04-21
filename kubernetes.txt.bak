@@ -1263,15 +1263,60 @@ resource limits and quotas
                            cpu: 1		
 	
 	Note: In terms of cpu k8s doesnot go behind the limits (it never throttles).
-		  but in terms of memory (RAM) k8s allows the pods to go behind the limit of RAM	
+		  but in terms of memory (RAM) k8s allows the pods to go behind the limit of RAM.	
 	
-ingress
+	
+Ingress
+	Cloud loadbalancer are costly as most of the times billing will be per requests so 
+	to avoid this the kubernetes solution is Ingress, we can run an external software based 
+	load balancer in our cluster.
+		
+	1. Ingress controller 
+		- This controller is used to execute the ingress resources which contains 
+		  routing rules and brings the external traffic based on routing rules to the 
+		  internal service.	
+	    - This controller will automatically monitors the exiting resources and also 
+		  identifies new ingress resources.
+		- This will be a third party controllers (tools) which we need to install it 
+          for one time in our cluster as controller.
+		- We are using nginx as ingress controller.
 
+	2. Ingress resources 
+		- In k8s Ingress resource is type of object which is used to define routing rules 
+		  based on path of incoming traffic to internal cluster service.
+		- api for ingress resource networking.k8s.io/v1 	
+		- Ingress can be used for revers proxy means to expose multiple services under same IP.
+		- Ingress can be used to apply ssl/tls certificates.
+
+		apiVersion: networking.k8s.io/v1	
+		kind: Ingress
+		metadata: 
+            name: my-ingress 
+        spec: 
+			rules: 
+				- host: example.com
+				    http: 
+					   paths: 
+					     - path: /
+						   backend
+				              serviceName: my-svc
+							  servicePort: 80
+						 - path: /login
+						   backend
+				              serviceName: my-login
+							  servicePort: 8090 	  
+							  
+		Note: / 	  -	 means the request from "http://www.example.com"
+			  /login  -	 means the request from "http://www.example.com/login"
+			  
+			  serviceName should be same as the name of the service metadata.
 network policy
+
+
 cronjob and Jobs 
 
 deployment stratergies 
-
+Multi master cluster 
 docker multistage build 
 docker compose 
 
