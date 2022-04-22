@@ -342,6 +342,63 @@ States of conatiner / Lifecycle of container
 	5. Dead - if docker daemon tried and failed to stop a container (host ram full)
 	6. Restarting - container will be in the phase of retarting the main process.
 
+Multistage build 
+	How to optimize docker build process ?
+	How to reduce the size of the docker image or cotainer ? 
+
+	After docker 1.6 version docker released this option.
+	1. There are 2 problems with the normal build process 
+			1. Size: challenge is to keep the image and its containers size as minimal as possible.
+			2. larger the surface area more the application is vurnalable to attacks. 
 	
-multistage build  
-docker compose 
+		- Multistage build allows us to define multiple FROM in same Dockerfile.
+		- Dependency between multile FROM is maintained by naming FROM using 
+		  AS keyword and we can refer this name in another FROM.
+
+				FROM <base_image> AS <STAGE_NAME>
+				
+		- Only the final FROM image is created leaving back all the other FROM.
+		- Copy only the required files from the named FROM stage like below.
+				FROM final_build
+				COPY --from <STAGE_NAME> <src_named_stage> <dest>
+	
+	2. Always try to use the slim / alpine / stretch version of base image instead 
+	   od using the fully loaded base image.
+	   
+	exapmle: https://github.com/jaintpharsha/docker_multi_build.git
+	
+docker-compose 
+	Installation 
+		1. sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+		2. sudo chmod +x /usr/local/bin/docker-compose
+		3. sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+		
+	- docker-compose is a tool for defining and running multile container docker application with 
+	  a single command.
+	- We use YAML file to do docker related configurations then with a single command 
+	  we can execute this YAML file to create docker objects defined in this file.	
+	  
+	docker-compose.yml 
+		version: "3.8"
+		services:
+			jenkins:
+				image: jenkins/jenkins:lts
+				container_name: dc-jenkins
+				ports:
+					- "8080:8080"
+					- "5000:5000"
+				networks:
+					- my_brid
+			alpine:
+				build: .
+				container_name: dc-ubuntu
+				volumes:
+					- my_vol:/home
+				networks:
+					- my_brid
+		networks:
+			my_brid:
+				driver: bridge
+
+		volumes:
+			my_vol: {} 

@@ -1312,7 +1312,58 @@ Ingress
 			  serviceName should be same as the name of the service metadata.
 			  
 network policy
-
+	- By default, In k8s any pod can communicate with each other within the cluster across 
+	  the different namespaces and worker node.
+	- The deafault netwrok of k8s is of open stack model this opens a huge risk for potential 
+	  security issues.
+    - We can use network polices to apply Deny all for the cluster and we can write polices 
+	  to allow only required requests to cluster.
+	- Network polices is defined for ingress and egress.
+	
+		apiVersion: networking.k8s.io/v1
+		kind: NetworkPolicy
+		metadata:
+			name: default-deny-all
+		spec: 
+		    podSelector: {} 
+			policyTypes: 
+			    - Ingress
+	
+	
+		apiVersion: networking.k8s.io/v1
+		kind: NetworkPolicy
+		metadata:
+			name: nginx-pod 
+		spec: 
+		    podSelector: 
+				matchLables:
+				     app: nginx
+			policyTypes: 
+			    - Ingress
+			ingress:
+				- from: 
+				   - podSelector: 
+				       matchLabels: 
+					       app: backend
+		          ports: 
+                    - port: 80
+                      protocol: TCP  					
+		
+	calico 
+		- Calico is created by a company called "Tigre". 
+		- Tigre is support a wide range od CNI for kubernetes only.
+		- Using this CNI plugin we can extend the usage of network policies and we can improve 
+		  the security over network.	
+		- Using calico we can define dynamic network policies susch auto calculated from many 
+		  sources of data is possible.
+		- multiple port mapping is supported in calico
+			
+	
+Assigment: overlay network type 
+		   Apply the network policy and try to ping/nc the between pods.	
+				
+				ping IP 
+				nc -v <private_ip> <port>
 
 cronjob and Jobs 
 	- The main function of a job is to create one or more pods and tracks the success 
@@ -1336,8 +1387,19 @@ cronjob and Jobs
 	  	  restartPolicy: Never
 
 	restartPolicy 
-		- This is applied to pod not for the Job 
-	
+		- This is applied to pod not for the Job.
+		- There are values,
+			1. Always 
+			   - This is the default restart policy containers will always be restarted if they stop, 
+			     even if they completed successfully. 
+			   - This policy should be used for applications that always needs to be running.
+			2. OnFailure
+			   	  - will always restart containers only if the container process exits with an error code.
+				  - If the container is determined to be unhealthy by a liveness probe it will be restarted.
+				  - we use this policy for applications that need to run successfully & then stop.
+			3. Never
+				  - The pod’s containers will never be restarted, even if the container exits with error code 
+				    or a liveness probe fails. 
 	The different type of jobs or common parameters are,
 	
 	Completions
@@ -1459,10 +1521,138 @@ cronjob and Jobs
 						- date; echo Hello from the Kubernetes cluster
 					  restartPolicy: OnFailure
 					  
-deployment stratergies 
-Multi master cluster 
-docker multistage build 
-docker compose 
-
-
+Deployment stratergies.	
+	Rolling Update 
+		- By default deployment in k8s uses rolling update stratergy which means if I want use 
+		  this stratergy I don'nt need to specify any parameters in spec file. 
+		- Example: By default k8s automatically decides the percentage of keeing available pods.
+		  usually one out 4 it updates. 
+		
+		- To overrride the default behaviour 
+			spec: 
+				stratergy: 
+					type: RollingUpdate 
+					rollingUpdate: 
+						maxSurge: 1
+						maxUnavailable: 25%
 			
+	Recreate 
+		The Recreate stratergy will bring all the old pods down immediately and the creates 
+		new updated pods to match the replica count.
+			spec: 
+				stratergy: 
+					type: Recreate 
+					
+	Blue/Green deployment
+		- We keep 2 sets of similar environment in which one will be live called blue  
+		  environment and the one which is not live is called as green. 
+		- we update the new changes to blue environment first which is not live and we 
+		  swap/ redirect the traffic from blue to green environment.
+		- Finally blue environment with new updates will become live and we rename it as 
+		  the current new blue environment.
+	
+	Canary release 
+		- A canary release is a software testing technique used to reduce the risk of 
+		  introducing a new software version into production by gradually rolling out 
+		  the change to a small subgroup of users, before rolling it out to the entire 
+		  platform/infrastructure.
+
+Multi master cluster (quoram) 
+	What is the size of the k8s cluster. ? 
+		- always the count of master nodes should a odd number 
+		- we are using loadbalancer / multiple people are working they may dd the worker nodes 
+		  so I never kept exact count of nodes but on average we have 20 to 25 worker nodes.
+	
+	How many nunber of master nodes are there in you k8s cluster ? 
+		- Always tell odd number of nodes (any odd number starting with 3, 5, 7, 9)
+		- Based on the quorum value we choose only odd number of nodes starting with 3 to 
+		  achive better fault tollerance cluster.
+		  
+pod eviction 
+
+	- Kubernetes evict pods if the node resources are running out such as cpu, RAM and storage.
+	- Pod with failed state will be evicted first because they may not running but could still 
+	  be using cluster resources and then k8s runs decision making based.
+	  
+	  Kubernetes looks at two different reasons to make eviction decision: 
+			1. QoS (Quality of Service) class. 
+				For every container in the pod:
+				  - There must be a memory limit and a memory request.
+				  - The memory limit must equal the memory request.
+				  - There must be a CPU limit and a CPU request.
+				  - The CPU limit must equal the CPU request.
+			2. Priority class.
+				- A pod's priority class defines the importance of the pod compared to other 
+				  pods running in the cluster.
+				- based on the priority low to high pods will be evicted.  
+
+k8s AutoScale			
+	Horizontal autoscaler 
+		Horizontal Pod Auto-Scaler (HPA)
+			- HPA is used to automatically scale the number of pods based on deployments, replicasets, 
+			  statefulsets or other objects, based on CPU, Memory threshold.
+			- Automatic scaling of the horizontal pod does not apply to objects that cannot be scaled.
+			  ex: DaemonSets.
+			- We need metric server as a soruce for autoscalling.
+
+			Metric server 
+				- Metrics Server collects resource metrics from Kubelets and exposes them in Kubernetes 
+				  API server through Metrics API for use by Horizontal Pod Autoscaler and Vertical Pod Autoscaler.
+				- kubectl top command use Metrics API to list the resource utilization of all pods. 
+				- Metrics Server is not meant for non-autoscaling purposes like we wont forward these metrics 
+				  data to monitoring tools. 
+				  
+			apiVersion: autoscaling/v2beta2
+			kind: HorizontalPodAutoscaler
+			metadata:
+			  name: php-apache-hps
+			spec:
+			  scaleTargetRef:
+				apiVersion: apps/v1
+				kind: Deployment
+				name: php-apache
+			  minReplicas: 1
+			  maxReplicas: 10
+			  metrics:
+			  - type: Resource
+				resource:
+				  name: cpu
+				  target:
+					type: Utilization
+					averageUtilization: 50 
+					
+				---------------- or ----------------
+				
+			kubectl autoscale deployment php-apache — cpu-percent=50 — min=1 — max=10		
+			
+			To list HPA 
+				kubectl get hpa
+			
+			
+		Vertical Pod Auto-Scaler (VPA)	   
+		    - vpa automatically adjusts the CPU and Memory attributes for your Pods.
+			- basically vpa will recreate your pod with the suitable CPU and Memory attributes.
+			- when we describe vpa, it will show recommendations for the Memory/CPU requests, Limits and it can also automatically 
+			  update it if enabled by the user
+		  
+		apiVersion: autoscaling.k8s.io/v1
+		kind: VerticalPodAutoscaler
+		metadata:
+		  name: my-app-vpa
+		spec:
+		  targetRef:
+			apiVersion: "apps/v1"
+			kind:       Deployment
+			name:       my-app
+		  updatePolicy:
+			updateMode: "Auto"  
+			
+			
+		Horizontal / Vertical Cluster Auto-Scaler		
+		  - Cluster Autoscaler is a tool that automatically adjusts the size of the Kubernetes 
+			cluster when one of the following conditions is true:
+				1. some pods failed to run in the cluster due to insufficient resources,
+				2. some nodes in the cluster that have been overloaded for an 
+				   extended period and their pods can be placed on other existing nodes.
+				   
+		  - Cluster autoscaller tools are mostly provided by public cloud providers.	
