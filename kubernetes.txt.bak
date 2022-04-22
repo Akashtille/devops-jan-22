@@ -1310,11 +1310,155 @@ Ingress
 			  /login  -	 means the request from "http://www.example.com/login"
 			  
 			  serviceName should be same as the name of the service metadata.
+			  
 network policy
 
 
 cronjob and Jobs 
+	- The main function of a job is to create one or more pods and tracks the success 
+	  status of pods.
+	- Jobs ensure that the specified number of pods is completed successfully and 
+	  when the job is completed pods go to the shutdown state and Job goes to completed state. 
+    - Mainly we use jobs to run pod temporarily till the task is completed and to run 
+	  tasks parallely.	
+	  
+	  apiVersion: batch/v1
+	  kind: Job
+	  metadata:
+	    name: my-job
+	  spec:
+	    template:
+	  	spec:
+	  	  containers:
+	  	  - name: busybox
+	  		image: busybox
+	  		command: ["echo", "This is first job"]
+	  	  restartPolicy: Never
 
+	restartPolicy 
+		- This is applied to pod not for the Job 
+	
+	The different type of jobs or common parameters are,
+	
+	Completions
+		- This is the number of times the job to run. default is 1.
+		- If, completions is 5 then job will run 5 times means 5 pods.
+	  apiVersion: batch/v1
+	  kind: Job
+	  metadata:
+	    name: my-job
+	  spec:
+	  completions: 5
+	    template:
+	  	spec:
+	  	  containers:
+	  	  - name: busybox
+	  		image: busybox
+	  		command: ["echo", "This is first job"]
+	  	  restartPolicy: Never	
+
+	parallelism
+		- By default jobs run serialy so to run jobs parallely we need to use the parallelism.
+		- parallelism is used to set the number of job that need to run prallely.
+		
+	  apiVersion: batch/v1
+	  kind: Job
+	  metadata:
+	    name: my-job
+	  spec:
+	  completions: 5
+	  parallelism: 2
+	    template:
+	  	spec:
+	  	  containers:
+	  	  - name: busybox
+	  		image: busybox
+	  		command: ["echo", "This is first job"]
+	  	  restartPolicy: Never
+
+	backoffLimit
+		- If the container is failing for some reason which affects the completion the job,
+		  then still job creates more pods one after another until it succeeds which will 
+		  simply put a load on the cluster, in this case backoffLimit is used.
+		-  backoffLimitlimit ensure the number pods to limit after failure.
+		- backoffLimit: 2, once pods fails for 2 times it won’t create more pods.
+	  
+	  apiVersion: batch/v1
+	  kind: Job
+	  metadata:
+	    name: my-job
+	  spec:
+	  backoffLimit: 2
+	    template:
+	  	spec:
+	  	  containers:
+	  	  - name: busybox
+	  		image: busybox
+	  		command: ["sleep", "60"]
+	  	  restartPolicy: Never	
+
+	activeDeadlineSecond
+		- This is used to set the execution time for pod and if pod takes more than this 
+		  deadline time then pods will be terminated automatically.
+
+	  apiVersion: batch/v1
+	  kind: Job
+	  metadata:
+	    name: my-job
+	  spec:
+	  activeDeadlineSecond: 20
+	    template:
+	  	spec:
+	  	  containers:
+	  	  - name: busybox
+	  		image: busybox
+	  		command: ["sleep", "60"]
+	  	  restartPolicy: Never
+		  
+	Scheduled / CronJob
+		apiVersion: batch/v1
+		kind: CronJob
+		metadata:
+		  name: hello
+		spec:
+		  schedule: "* * * * *"
+		  jobTemplate:
+			spec:
+			  template:
+				spec:
+				  containers:
+				  - name: hello
+					image: busybox:1.28
+					imagePullPolicy: IfNotPresent
+					command:
+					- /bin/sh
+					- -c
+					- date; echo Hello from the Kubernetes cluster
+				  restartPolicy: OnFailure
+		
+		1. SuccessfulJobHistoryLimit and FailedJobHistoryLimit
+			apiVersion: batch/v1
+			kind: CronJob
+			metadata:
+			  name: hello
+			spec:
+			  schedule: "* * * * *"
+			  successfulJobHistoryLimit: 2
+			  failedJobHistoryLimit: 1
+			  jobTemplate:
+				spec:
+				  template:
+					spec:
+					  containers:
+					  - name: hello
+						image: busybox:1.28
+						imagePullPolicy: IfNotPresent
+						command:
+						- /bin/sh
+						- -c
+						- date; echo Hello from the Kubernetes cluster
+					  restartPolicy: OnFailure
+					  
 deployment stratergies 
 Multi master cluster 
 docker multistage build 
