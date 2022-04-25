@@ -1,0 +1,206 @@
+Terraform 
+	- Terraform is an open source tool from HashiCorp company used to 
+	  write Insfrastructure as A Code (IaC) to automate provisioning the public cloud insfrasructure.
+  	
+	- Terraform is written in Golang and available on GitHub 
+	
+	- Terraform code/configuration is written in HCL (HashiCorp Language) of type .tf
+	
+	- Terraform helps in prediction of changes through plans and we can know what changes 
+	  will be applied before applying it.
+
+	- Terraform always keeps the infrastructure state saved and terraform at every apply 
+	  of the changes to insfrasructure is always matched with the state file and it predicts the changes 
+	  need to be applied.
+	  
+	- Safe to run terraform code many times because terraform only apply the changes for 
+	  the first if the chagnes are not there in state.
+
+	- Terraform scripts can be version contralled means we keep the terraform 
+	  scripts in github.
+	  
+Terraform Provider 
+	- providers are the API to interact with public clouds in our company, aws is the 
+	  provider that we are using.
+	- In a complete terraform project we can have only one provider block.
+		
+			provider "aws" {
+				access_key = ""
+				secret_key = ""
+				region = ""
+			}
+		
+	- If we wont configure access_key and secret_key key in provider block then terraform 
+	  will try to fetch the keys from aws_cli that is using the below environment variables.
+			1. AWS_ACCESS_KEY_ID
+			2. AWS_SECRET_ACCESS_KEY
+			
+	How to use multiple configurations with same provider block ?
+	How to use a provider with multiple region ? 
+		
+	provider aliases
+		- we can define multiple configuration for the same provider and select which provider
+		  to use in resource and other blocks.
+		
+		provider "aws" {
+			region = "ap-south-1"
+		}
+		
+		provider "aws" {
+			alias = "region1"
+			region = "us-east-1"
+		}
+
+		provider "aws" {
+			alias = "region2"
+			region = "us-east-2"
+		}		
+		
+		How to use provider alias ?
+			resource "<resource_type>" "<resource_name>" {
+				provider = aws.region1
+			}
+			
+			resource "aws_instance" "my_instance" {
+				provider = aws.region2
+				ami = ""
+				instance_type = "t2.micro"
+			}
+			
+Terraform Registry 
+	- Terraform registry is a repository of modules and resources which are wrrite by trerraform 
+	  w.r.t public clouds and we user this resources for provisioning	public clouds.
+	- Terraform regisrty is also a community based registry which are maintained by providers only.
+	
+		URL: regisrty.terraform.io
+		
+	Example: aws - ec2 instance -> aws_instance
+				 - s3 bucket    -> aws_s3_bucket 
+				 - vpc 		    -> aws_vpc	
+				 
+Assignment: List all the resource types of aws provider which you know in aws ? 
+
+Terraform init 
+	- This command we use to insitialize a working directory containing terraform script as 
+	  terraform project. 
+	- This in the first command that should be executed after writing a new terraform script.
+    - It is safe to run this command multiple times. 
+			
+		The insitializations steps are: 
+			1. Initializing the Backend ....
+			2. Initializing provider plugins ...
+			3. Initializing the child modules ...
+			
+terraform plan 
+	- the terraform plan is used to create a execution plan which internally performs a refresh 
+	  unless user has disabled this refresh.
+	- Plan will scan all the .tf scripts in the project directory and it manages to determine 
+	  the changes to be applied to cloud (means it determines the desired state).
+	- Plan will never do any changes to the actual insfrasructure it just gives what desired 
+	  state will be applied.
+	
+	To save a plan in a file 
+		terraform plan -out <file_name>	
+		terraform plan -out plan.out	
+
+terraform apply 
+	- The terraform apply command is used to apply the planned changes to the actual cloud 
+	  insfrasructure. 
+	- This will internally run the plan again then with the user confirmation the predicted 
+	  changes will be applied.
+		
+	To apply changes will out user confirmation 
+		terraform apply --auto-approve
+	
+	To run a perticular terraform script
+		terraform apply <script>.tf <script1>.tf
+		
+	To apply a plan file
+		terraform apply <plan_file>
+			
+tarrafotm destroy 
+	- This is used to destroy the resources which are manged by this current terraform 
+	  scripts.
+    - Crate a destroy plan
+
+		TO destroy one resource
+			terraform destroy -target <resource_type>.<resource_name>
+			example: terraform destroy -target aws_instance.ec2_ubuntu
+
+terraform validate 
+	- This is to validate the syntax of the terraform scripts in a project.		
+		
+Terraform state 
+	- When 
+	Types of state in terraform 
+		- local 
+			we can keep the state file locally in the same machince where we execute the terraform code.
+		
+		- Remote 
+			also know as backend, Instead of keeping state file in local we can keep it in a remote location 
+			such as s3, etcd, kuberntes, artifactory etc.
+			
+			Benifits
+			  - Safer storage: As state file contains sensitive data, Saving in the remote place we can safe quard the data 
+							   example: in s3 backed we can use encrypted s3 to secure the state file.
+			  - Versioning/Auditing: Invalid access can be identified or can maintain the version on state file.
+			  - Multiple user of same team can apply the changes by sharing the same state file.
+			
+terraform settings 
+	- used for specifying provider requirements 
+	- we can restrict the provider version 
+	- we configure backend in this settings 
+	- we use terraform block 
+	- default file terraform.tf / versions.tf 	
+		
+		terraform {
+			
+		}
+		
+terraform variables and outputs 
+	- Local variables
+		A local valuse assigned to a name, so we can use it multiple times with in the same module 
+		without repeating it.
+		
+			locals {
+				service_name = "gmail"
+				owner = "Kubernetes"
+			}
+		
+	- input variables
+		Input variable serve as parameters for terraform configuration files/modules 
+		main advantage is input variables are used to configure the modules instead of altering the source code 
+		we can pass the input values.
+		To supress the values in the console output use sensitive = true 
+			
+			variable "bucket_name" {
+				type = string
+				sensitive = true
+				default = "s3-backend-bucket-aaaaa-22222"
+			}
+		 
+	- output variables 
+		- output variable are like return values of terraform code.
+		- A child module can use the output of anotehr module as input.
+		- To supress the values in the console output use sensitive = true
+
+			output "ec2_public_ip" {
+				value = aws_instance.new_ec2.public_ip 
+			}
+	
+Modules
+	all the set of terraform configurations (all .tf files) in a folder is called as module 
+	
+	Root Module 
+		- The .tf files iin the working directories is root module 
+		- Where we run terraform init which contains terraform configurations is root module 
+		- Every terraform configuration has to have atleast one module by default it will be root module.
+		
+	Child module 
+		A terraform set of configurations defined in sub folder can be called by other modules (root module)
+		to extend the functionality. 
+		These are usually user defined modules.		
+		
+Assignment: create s3 with versioning enabled and sse of default type.
+				- no value should be hard coded in the resource block.
+				- should print output - s3 buckate name and some 4 details
