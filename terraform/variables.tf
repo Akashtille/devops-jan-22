@@ -1,14 +1,14 @@
-variable "ec2_ami" {
+variable "root_bucket_name" {
 	type = string
-	default = "ami-04505e74c0741db8d"
+	default = "my-first-s3-backend-bucket-4654134"
 }
 
-variable "ec2_type" {
+variable "root_dynamodb_name" {
 	type = string
-	default = "t2.micro"
+	default = "my_dynamodb_loking_table"
 }
 
-variable "ec2_name" {
+variable "root_hash_key" {
 	type = string
-	default = "Terraform-ec2"
+	default = "LockID"
 }

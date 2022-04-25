@@ -131,7 +131,11 @@ terraform validate
 	- This is to validate the syntax of the terraform scripts in a project.		
 		
 Terraform state 
-	- When 
+	- When ever we build an insfrastructure with terraform configuration files (terraform apply) 
+	  a file gets generates by name terraform.tfstate which contains the all the configuration data in JSON format.
+	- When we try to apply / rerun the apply command, terraform will compare the actual state of cloud with the 
+	  state file and generates the plan.
+	  
 	Types of state in terraform 
 		- local 
 			we can keep the state file locally in the same machince where we execute the terraform code.
